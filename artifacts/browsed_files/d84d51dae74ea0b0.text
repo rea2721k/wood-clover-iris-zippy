@@ -1,0 +1,149 @@
+#pragma once
+
+#define _HIDAPI_STATIC
+#include "hidapi.h"
+
+#include <string>
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include <cctype>
+#include <cwchar>
+#include <cstdarg>
+#include <cstdio>
+
+using std::string;
+
+struct AppState {
+    bool silent = false;
+    bool verbose = true;
+    void log(const char* fmt, ...) const {
+        if (silent)
+            return;
+        va_list ap;
+        va_start(ap, fmt);
+        std::vprintf(fmt, ap);
+        std::printf("\n");
+        std::fflush(stdout);
+        va_end(ap);
+    }
+};
+
+struct DeviceInfo {
+    const hid_device_info* raw = nullptr;
+    string path;
+    unsigned vid = 0, pid = 0;
+    int iface = -1;
+    unsigned usage_page = 0, usage = 0;
+    string manufacturer, product, serial;
+};
+
+inline string narrow_ascii(const wchar_t* ws) {
+    if (!ws)
+        return {};
+    string out;
+    out.reserve(std::wcslen(ws));
+    for (const wchar_t* p = ws; *p; ++p)
+        out.push_back((*p <= 127) ? char(*p) : '?');
+    return out;
+}
+
+inline bool icontains(std::string_view h, std::string_view n) {
+    auto low = [](unsigned char c) { return char(std::tolower(c)); };
+    string H(h.size(), 0), N(n.size(), 0);
+    std::transform(h.begin(), h.end(), H.begin(), low);
+    std::transform(n.begin(), n.end(), N.begin(), low);
+    return H.find(N) != string::npos;
+}
+
+struct HidCloser {
+    void operator()(hid_device* d) const noexcept {
+        if (d)
+            hid_close(d);
+    }
+};
+using HidHandle = std::unique_ptr<hid_device, HidCloser>;
+
+class HidSession {
+  public:
+    explicit HidSession(const AppState& s) : app(s) {
+        hid_init();
+    }
+    ~HidSession() {
+        hid_exit();
+    }
+
+    std::vector<DeviceInfo> enumerate_all() const {
+        std::vector<DeviceInfo> v;
+        if (auto* head = hid_enumerate(0, 0)) {
+            for (auto* d = head; d; d = d->next) {
+                DeviceInfo x;
+                x.raw = d;
+                x.path = d->path ? d->path : "";
+                x.vid = d->vendor_id;
+                x.pid = d->product_id;
+                x.iface = d->interface_number;
+                x.usage_page = d->usage_page;
+                x.usage = d->usage;
+                x.manufacturer = narrow_ascii(d->manufacturer_string);
+                x.product = narrow_ascii(d->product_string);
+                x.serial = narrow_ascii(d->serial_number);
+                v.push_back(std::move(x));
+            }
+            hid_free_enumeration(head);
+        }
+        return v;
+    }
+
+    static HidHandle open_path(const char* p) {
+        return HidHandle{hid_open_path(p)};
+    }
+
+    int send_report_any(hid_device* dev, uint8_t a, uint8_t b) const {
+        unsigned char r64[64] = {0};
+        r64[0] = 0x04;
+        r64[1] = 0x04;
+        r64[2] = 0x91;
+        r64[3] = 0x02;
+        r64[4] = a;
+        r64[5] = b;
+        int wA = hid_write(dev, r64, sizeof(r64));
+        if (app.verbose)
+            app.log("hid_write 64 -> %d", wA);
+
+        int wB = -1, wF = -1;
+        if (wA < 0) {
+            unsigned char r65[65] = {0};
+            r65[1] = 0x04;
+            r65[2] = 0x04;
+            r65[3] = 0x91;
+            r65[4] = 0x02;
+            r65[5] = a;
+            r65[6] = b;
+            wB = hid_write(dev, r65, sizeof(r65));
+            if (app.verbose)
+                app.log("hid_write 65 -> %d", wB);
+        }
+        if (wA < 0 && wB < 0) {
+            wF = hid_send_feature_report(dev, r64, sizeof(r64));
+            if (app.verbose)
+                app.log("hid_feature 64 -> %d", wF);
+            if (wF < 0) {
+                unsigned char r65f[65] = {0};
+                r65f[1] = 0x04;
+                r65f[2] = 0x04;
+                r65f[3] = 0x91;
+                r65f[4] = 0x02;
+                r65f[5] = a;
+                r65f[6] = b;
+                wF = hid_send_feature_report(dev, r65f, sizeof(r65f));
+                if (app.verbose)
+                    app.log("hid_feature 65 -> %d", wF);
+            }
+        }
+        return (wA >= 0) ? wA : ((wB >= 0) ? wB : wF);
+    }
+
+  private:
+    const AppState& app;
+};

@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SensLab",
+      "hasCanvas": false,
+      "bodyTextLen": 2216,
+      "bodyTextHash": "b1a330c1d00fa8a97b3a616d504ee787f4eeaf97fb2354ab99382190a1d8e21c",
+      "bodyTextPrefix": "RBK RBK BUILT FOR BETTER AIM. Geri Dönüşüm SensLab Setup SensLab",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SensLab",
+      "hasCanvas": false,
+      "bodyTextLen": 2080,
+      "bodyTextHash": "a72e3233136e12ef51969c3dea1a75bfd85cad1ce4820bf4915f553dbbf82bfb",
+      "bodyTextPrefix": "RBK Geri Dönüşüm SensLab Setup SensLab — Precision Lives Here SE",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

@@ -1,0 +1,22 @@
+SensLab RBK Edition
+===================
+
+Bu, Grok ile yenilenen SensLab stüdyosudur.
+
+Nasıl açılır
+------------
+1. SensLab.bat dosyasına çift tıkla
+   VEYA SensLab_RBK_Edition.html dosyasını Chrome / Edge ile aç.
+2. İnternet şart değil (fontlar için varsa daha iyi görünür).
+3. Ayarların bu tarayıcıda kaydolur.
+
+İçindekiler
+-----------
+- 100+ oyun profili ve kalibrasyon tablosu
+- PUBG / Valorant / CS2 dahil tüm oyunlar
+- Monitör Hz (60–600) ve Fare Hz (125–8000)
+- Canlı fare algılama
+- Kurulum + kaldırma ekranı
+- TR / EN
+
+SensLab · RBK
